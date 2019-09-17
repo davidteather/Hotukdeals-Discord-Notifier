@@ -1,11 +1,11 @@
 {
-    "min_upvotes": "100",
-    "max_upvotes": "500",
+    "min_upvotes": "500",
+    "max_upvotes": "1000",
     "base_url": "https://www.hotukdeals.com",
     "pages_to_index": "10",
-    "discord_api_token": "1123231",
-    "min_price": "0.99",
+    "discord_api_token": "1234567890",
+    "min_price": "0",
     "max_price": "500",
-    "discord_channel_id": "123456789",
-    "time_interval_seconds": "10"
+    "discord_channel_id": "1234567890",
+    "time_interval_seconds": "1800"
 }

@@ -5,6 +5,7 @@ from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 import json
 
+
 with open('settings.json') as data:
     settings = json.load(data)
 
@@ -32,64 +33,119 @@ class MyClient(discord.Client):
 
         # create the background task and run it in the background
         self.bg_task = self.loop.create_task(self.my_background_task())
-            
 
-    def checkDeals(self, url):
-        # Selenium stuff
-        options = Options()
-        options.headless = False
-        driver = webdriver.Firefox(options=options)
-        driver.set_window_position(0, 0)
-        driver.set_window_size(1920, 1080)
+
+    # Check deals
+    def checkDealsBeautifulSoup(self, url):
+        # Imports
+        import requests
+        from bs4 import BeautifulSoup
+        import json
+        import random
+
+        # Loads JSON and vars
+        with open('settings.json') as data:
+            settings = json.load(data)
+
+            min_upvotes = int(settings["min_upvotes"])
+            max_upvotes = int(settings["max_upvotes"])
+
+            min_price = float(settings["min_price"])
+            max_price = float(settings["max_price"])
+
+        # Loads proxies
+        with open('proxies.txt', 'r') as proxies:
+            proxies = proxies.readlines()
+
+        # Picks random proxy
+        proxy = random.choice(proxies)
 
         returnMsgs = []
         newArray = []
 
+        # Reads already used things
         with open('data/usedLinks.txt', 'r') as data:
             usedArray = data.readlines()
 
-        # Gets webpage
-        driver.get(url)
+        # Sets up proxy
+        proxies = {
+            "http": "http://" + proxy,
+            "https": "https://" + proxy,
+        }
 
-        
+        page = requests.get(url, proxies=proxy)
+        soup = BeautifulSoup(page.text, 'html.parser')
+        var = False
 
-        deals = driver.find_elements_by_xpath('//article[@data-handler="history"]/div[@class="threadGrid"]/div[@class="threadGrid-headerMeta"]/div[@class="flex boxAlign-ai--all-c boxAlign-jc--all-sb space--b-2"]/div[@class="cept-vote-box vote-box overflow--hidden border border--color-borderGrey bRad--a"]/span')
+        # Tries to get things
+        try:
+            listings = soup.find_all(
+                'article', attrs={'data-handler': 'history'})
+            upvotes = soup.find_all('span', attrs={'class': 'cept-vote-temp'})
+            pricing = soup.find_all('span', attrs={'class': 'thread-price'})
+            urls = soup.find_all(
+                'a', attrs={'class': 'cept-thread-image-link'})
+            var = True
+        except:
+            var = False
 
-        
-        print(len(deals))
-        for index in range(0,len(deals)):
-            print(index)
-            # '//div[@class="cept-vote-box vote-box overflow--hidden border border--color-borderGrey bRad--a"]/span'
-            # '//article[@data-handler="history"]/div[@class="threadGrid"]/div[@class="threadGrid-headerMeta"]/div[@class="flex boxAlign-ai--all-c boxAlign-jc--all-sb space--b-2"]/div[@class="cept-vote-box vote-box overflow--hidden border border--color-borderGrey bRad--a"]/span'
-            upvotes = int(driver.find_elements_by_xpath('//article[@data-handler="history"]/div[@class="threadGrid"]/div[@class="threadGrid-headerMeta"]/div[@class="flex boxAlign-ai--all-c boxAlign-jc--all-sb space--b-2"]/div[@class="cept-vote-box vote-box overflow--hidden border border--color-borderGrey bRad--a"]/span')[index].text.strip().replace(" ", "").replace("°", "").replace("\n", ""))
-            priceString = driver.find_elements_by_xpath('//span[@class="thread-price text--b vAlign--all-tt cept-tp size--all-l size--fromW3-xl"]')[index].text.strip().replace("£", "")
-            url = driver.find_elements_by_xpath('//a[@class="cept-tt thread-link linkPlain thread-title--list"]')[index].get_attribute('href')
-            
+        if var == True:
+            upvotesIndex = 0
+            index = 0
+            for x in range(0, len(listings)):
 
-            if priceString != "FREE":
-                price = float(priceString)
-            else:
-                price = 0
+                try:
+                    upvote = upvotes[upvotesIndex].text.strip().replace(
+                        " ", "").replace("°", "").replace("\n", "")
+                    if "Deal" in upvote or "alerts" in upvote:
+                        upvotesIndex += 1
+                        upvote = upvotes[upvotesIndex].text.strip().replace(
+                            " ", "").replace("°", "").replace("\n", "")
 
-            if min_price <= price <= max_price and min_upvotes <= upvotes <= max_upvotes:
-                if url not in usedArray:
-                    # Return Message
-                    message = url + " Satisfies your deal criteria. It is at " + str(upvotes) + " degrees and costs " + str(priceString)
-                    returnMsgs.append(message)
-                    usedArray.append(url)
-                    newArray.append(newArray)
+                except:
+                    upvote = 0
 
-        print('here')
+                try:
+                    price = pricing[index].text.strip().replace("£", "")
+                except:
+                    price = 0
+                try:
+                    url = urls[index].get('href')
+                except:
+                    url = None
+                if price != "FREE":
+                    try:
+                        price = float(price.replace(",", ""))
+                    except:
+                        price = 0
+                else:
+                    price = 0
+
+                if min_price <= price <= max_price:
+                    if min_upvotes <= int(upvote) <= max_upvotes:
+                        if url != None:
+                            if url + "\n" not in usedArray:
+                                # Return Message
+                                message = url + " Satisfies your deal criteria. It is at " + \
+                                    str(upvote) + \
+                                    " degrees and costs £" + str(price)
+                                returnMsgs.append(message)
+                                usedArray.append(url)
+                                newArray.append(url)
+
+                upvotesIndex += 1
+                index += 1
+
+        # Saves new logged files
         with open('data/usedLinks.txt', 'a') as fileObj:
             for line in newArray:
-                fileObj.write(line)
+                fileObj.write(line + "\n")
 
-        
-
-        driver.quit()
-
+        # Returns stuff
         return returnMsgs
 
+
+    # On start
     async def on_ready(self):
         print('Logged in as')
         print(self.user.name)
@@ -97,31 +153,28 @@ class MyClient(discord.Client):
         print('------')
 
 
+    # On message
     async def on_message(self, message):
         if message.author.id == self.user.id:
             return
 
-        if message.content.startswith('!add-url'):
-            text = message.content
-            self.checkUrls.append(text.split("!add-url ")[1])
-            await message.channel.send(text.split("!add-url ")[1] + " added to the program.")
 
-        if message.content.startswith('!remove-url'):
-            text = message.content.split("!remove-url ")[1]
-            self.checkUrls.remove(text)
-            await message.channel.send(text + " removed from the program.")
-
-
+    # Background manager
     async def my_background_task(self):
         await self.wait_until_ready()
-        channel = self.get_channel(int(channel_id)) # channel ID goes here
+        channel = self.get_channel(int(channel_id))
         while not self.is_closed():
-            for page in range(0,int(pages_to_index)):
-                res = self.checkDeals(base_url + "?page=" + str(page))
+            for page in range(0, int(pages_to_index)):
+                print('checking page ' + str(page))
+                res = self.checkDealsBeautifulSoup(
+                    base_url + "?page=" + str(page))
                 if res != []:
                     for msg in res:
                         await channel.send(msg)
             await asyncio.sleep(int(time_interval_seconds))
 
+
+
+# Main
 client = MyClient(channel_id)
 client.run(discord_api_key)
