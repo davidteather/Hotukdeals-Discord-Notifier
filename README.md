@@ -20,7 +20,7 @@ Have python 3.x installed. This was tested with 3.7.3
 
 ## Running the program
 
-To run the software you first need to add information into the proxies.txt and settings.json
+To run the software you first need to add information into the proxies.txt and settings.json.
 
 ### **Example of settings.json**
 ```
@@ -55,12 +55,15 @@ To run the software you first need to add information into the proxies.txt and s
 
 **time_interval_seconds** - The amount of time in seconds that you want to delay after all the pages are scraped. I recommend over 30 minutes. 
 
-### **Example of proxies.txt**
+### **Example of proxies.txt and httpsProxy.txt**
 ```
 1234.1234.1234:1010
 ```
 
 Each line should be a new proxy with a port, must be able to manage SSL.
+
+Http proxy addresses go into the proxies.txt and https proxy addresses go into the httpsProxy.txt file.
+
 
 ### Executing the program
 
