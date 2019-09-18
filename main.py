@@ -102,98 +102,110 @@ class MyClient(discord.Client):
             index = 0
             for x in range(0, len(listings)):
                 try:
-                    upvote = upvotes[upvotesIndex].text.strip().replace(
-                        " ", "").replace("°", "").replace("\n", "")
-                    if "Deal" in upvote or "alerts" in upvote:
-                        upvotesIndex += 1
+                    try:
                         upvote = upvotes[upvotesIndex].text.strip().replace(
                             " ", "").replace("°", "").replace("\n", "")
+                        if "Deal" in upvote or "alerts" in upvote:
+                            upvotesIndex += 1
+                            upvote = upvotes[upvotesIndex].text.strip().replace(
+                                " ", "").replace("°", "").replace("\n", "")
 
-                except:
-                    upvote = 0
+                    except:
+                        upvote = 0
 
 
-                try:
-                    price = pricing[index].text.strip().replace("£", "")
-                except:
-                    price = 0
-                try:
-                    url = urls[index].get('href')
-                except:
-                    url = None
-                if price != "FREE":
                     try:
-                        price = float(price.replace(",", ""))
+                        price = pricing[index].text.strip().replace("£", "")
                     except:
                         price = 0
-                else:
-                    price = 0
+                    try:
+                        url = urls[index].get('href')
+                    except:
+                        url = None
+                    if price != "FREE":
+                        try:
+                            price = float(price.replace(",", ""))
+                        except:
+                            price = 0
+                    else:
+                        price = 0
 
-                if min_price <= price <= max_price:
-                    if min_upvotes <= int(upvote) <= max_upvotes:
-                        if url != None:
-                            if url + "\n" not in usedArray and "/deals/" in url:
-                                # Return Message
-                                message = url + " Satisfies your deal criteria. It is at " + \
-                                    str(upvote) + \
-                                    " degrees and costs £" + str(price)
+                    if min_price <= price <= max_price:
+                        if min_upvotes <= int(upvote) <= max_upvotes:
+                            if url != None:
+                                if url + "\n" not in usedArray and "/deals/" in url:
+                                    # Return Message
+                                    message = url + " Satisfies your deal criteria. It is at " + \
+                                        str(upvote) + \
+                                        " degrees and costs £" + str(price)
 
-                                # "Apple iPad Air 3 10.5 2019 model, 64 GB 256 GB"
-                                # "https://www.hotukdeals.com/deals/ipad-air-2019-3293151"
-                                # "\n**Price**: $price \n**Temperature**: $upvote"
-                                r = requests.get(url, proxies=proxy) 
-                                soup2 = BeautifulSoup(r.text, 'html.parser')
-                                
-                                image = soup2.find('img', attrs={'class': 'thread-image'})
-                                try:
-                                    thumbnail = image2.get('src')
-                                except:
-                                    thumbnail = "https://proxy.duckduckgo.com/iu/?u=https%3A%2F%2Fsitechecker.pro%2Fwp-content%2Fuploads%2F2017%2F12%2F404.png&f=1&nofb=1"
-                                
-                                
-                                try:
-                                    title = image.get('alt')
-                                except:
-                                    title = "Error"
-                                
-                                if title != None and thumbnail != None:
-                                    json = {
-                                        "title": title,
-                                        "url": url,
-                                        "temp": int(upvote),
-                                        "price": float(price),
-                                        "thumbnail": thumbnail
-                                    }
-                                elif title == None and thumbnail != None:
-                                    json = {
-                                        "title": "Error",
-                                        "url": url,
-                                        "temp": int(upvote),
-                                        "price": float(price),
-                                        "thumbnail": thumbnail
-                                    }
+                                    # "Apple iPad Air 3 10.5 2019 model, 64 GB 256 GB"
+                                    # "https://www.hotukdeals.com/deals/ipad-air-2019-3293151"
+                                    # "\n**Price**: $price \n**Temperature**: $upvote"
+                                    print('here yeah' + str(x))
 
-                                elif title != None and thumbnail == None:
-                                    json = {
-                                        "title": title,
-                                        "url": url,
-                                        "temp": int(upvote),
-                                        "price": float(price),
-                                        "thumbnail": "https://proxy.duckduckgo.com/iu/?u=http%3A%2F%2Fegyptianstreets.com%2Fwp-content%2Fuploads%2F2017%2F07%2F404.jpg&f=1&nofb=1"
-                                    }
+                                    if proxyvar == "True" or proxyvar == True:
+                                        r = requests.get(url, proxies=proxy) 
+                                    else:
+                                        r = requests.get(url)
+                                    soup2 = BeautifulSoup(r.text, 'html.parser')
+                                    
+                                    
 
-                                elif title == None and thumbnail == None:
-                                    json = {
-                                        "title": "Error",
-                                        "url": url,
-                                        "temp": int(upvote),
-                                        "price": float(price),
-                                        "thumbnail": "https://proxy.duckduckgo.com/iu/?u=http%3A%2F%2Fegyptianstreets.com%2Fwp-content%2Fuploads%2F2017%2F07%2F404.jpg&f=1&nofb=1"
-                                    }
+                                    image = soup2.find('img', attrs={'class': 'thread-image'})
+                                    newPrice = float(soup2.find('span', attrs={'class': 'thread-price'}).text.strip().replace("£", ""))
+                                    try:
+                                        thumbnail = image.get('src')
+                                    except:
+                                        thumbnail = "https://proxy.duckduckgo.com/iu/?u=https%3A%2F%2Fsitechecker.pro%2Fwp-content%2Fuploads%2F2017%2F12%2F404.png&f=1&nofb=1"
+                                    
+                                    
 
-                                returnMsgs.append(json)
-                                usedArray.append(url)
-                                newArray.append(url)
+                                    try:
+                                        title = image.get('alt')
+                                    except:
+                                        title = "Error"
+                                    
+                                    if title != None and thumbnail != None:
+                                        json = {
+                                            "title": title,
+                                            "url": url,
+                                            "temp": int(upvote),
+                                            "price": float(newPrice),
+                                            "thumbnail": thumbnail
+                                        }
+                                    elif title == None and thumbnail != None:
+                                        json = {
+                                            "title": "Error",
+                                            "url": url,
+                                            "temp": int(upvote),
+                                            "price": float(newPrice),
+                                            "thumbnail": thumbnail
+                                        }
+
+                                    elif title != None and thumbnail == None:
+                                        json = {
+                                            "title": title,
+                                            "url": url,
+                                            "temp": int(upvote),
+                                            "price": float(newPrice),
+                                            "thumbnail": "https://proxy.duckduckgo.com/iu/?u=http%3A%2F%2Fegyptianstreets.com%2Fwp-content%2Fuploads%2F2017%2F07%2F404.jpg&f=1&nofb=1"
+                                        }
+
+                                    elif title == None and thumbnail == None:
+                                        json = {
+                                            "title": "Error",
+                                            "url": url,
+                                            "temp": int(upvote),
+                                            "price": float(newPrice),
+                                            "thumbnail": "https://proxy.duckduckgo.com/iu/?u=http%3A%2F%2Fegyptianstreets.com%2Fwp-content%2Fuploads%2F2017%2F07%2F404.jpg&f=1&nofb=1"
+                                        }
+
+                                    returnMsgs.append(json)
+                                    usedArray.append(url)
+                                    newArray.append(url)
+                except:
+                    continue
                 upvotesIndex += 1
                 index += 1
 
@@ -201,7 +213,6 @@ class MyClient(discord.Client):
         with open('data/usedLinks.txt', 'a') as fileObj:
             for line in newArray:
                 fileObj.write(line + "\n")
-
         # Returns stuff
         return returnMsgs
 
