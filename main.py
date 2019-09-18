@@ -95,8 +95,6 @@ class MyClient(discord.Client):
         pricing = soup.find_all('span', attrs={'class': 'thread-price'})
         urls = soup.find_all(
             'a', attrs={'class': 'cept-thread-image-link'})
-        thumbnails = soup.find_all('img', attrs={'class': 'thread-image'})
-        titles = soup.find_all('a', attrs={'class': 'thread-link'})
         var = True
 
         if var == True:
@@ -121,7 +119,6 @@ class MyClient(discord.Client):
                     price = 0
                 try:
                     url = urls[index].get('href')
-                    title = titles[index].get('title')
                 except:
                     url = None
                 if price != "FREE":
@@ -131,12 +128,6 @@ class MyClient(discord.Client):
                         price = 0
                 else:
                     price = 0
-
-
-                try:
-                    thumbnail = thumbnails[index].get('src')
-                except:
-                    thumbnail = "https://proxy.duckduckgo.com/iu/?u=https%3A%2F%2Fsitechecker.pro%2Fwp-content%2Fuploads%2F2017%2F12%2F404.png&f=1&nofb=1"
 
                 if min_price <= price <= max_price:
                     if min_upvotes <= int(upvote) <= max_upvotes:
@@ -150,6 +141,21 @@ class MyClient(discord.Client):
                                 # "Apple iPad Air 3 10.5 2019 model, 64 GB 256 GB"
                                 # "https://www.hotukdeals.com/deals/ipad-air-2019-3293151"
                                 # "\n**Price**: $price \n**Temperature**: $upvote"
+                                r = requests.get(url, proxies=proxy) 
+                                soup2 = BeautifulSoup(r.text, 'html.parser')
+                                
+                                image = soup2.find('img', attrs={'class': 'thread-image'})
+                                try:
+                                    thumbnail = image2.get('src')
+                                except:
+                                    thumbnail = "https://proxy.duckduckgo.com/iu/?u=https%3A%2F%2Fsitechecker.pro%2Fwp-content%2Fuploads%2F2017%2F12%2F404.png&f=1&nofb=1"
+                                
+                                
+                                try:
+                                    title = image.get('alt')
+                                except:
+                                    title = "Error"
+                                
                                 if title != None and thumbnail != None:
                                     json = {
                                         "title": title,
