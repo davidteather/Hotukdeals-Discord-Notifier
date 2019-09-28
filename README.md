@@ -33,7 +33,8 @@ To run the software you first need to add information into the proxies.txt and s
     "min_price": "0",
     "max_price": "500",
     "discord_channel_id": "1234567890",
-    "time_interval_seconds": "1800"
+    "time_interval_seconds": "1800",
+    "proxy": "False"
 }
 ```
 
